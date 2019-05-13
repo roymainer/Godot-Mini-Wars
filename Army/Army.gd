@@ -19,11 +19,12 @@ var selected_units = []
 
 # selected units formation
 var front_line_start_point = Vector2()
-var prev_front_line_start_point = Vector2()
 var front_line_end_point = Vector2()
 var front_line_vector = Vector2()  
-var front_line_middle = Vector2()  # middle of the front line
+var front_line_middle_point = Vector2()  # middle of the front line
 var front_line_normal = Vector2()  # the direction where the models are facing
+
+var prev_front_line_start_point = Vector2()
 
 # Formation
 var is_drawing = false  # flag for drawing the units formations and movement paths
@@ -40,7 +41,6 @@ func _ready():
 func _process(delta):
 	_control()
 	
-	var dis = (mouse_pos - front_line_start_point).length()
 	if is_drawing:
 		calc_front_line_vectors(mouse_pos)
 	
@@ -51,9 +51,12 @@ func _process(delta):
 func _control():
 	
 	mouse_pos = get_global_mouse_position()  # update mouse position
+	mouse_pos.x = int(mouse_pos.x)
+	mouse_pos.y = int(mouse_pos.y)
 	
 	if Input.is_action_just_pressed("mouse_click_l"):
 		# TODO: add selected units or clear selected units
+		pre_combat_stage = !pre_combat_stage
 		pass
 		
 	if Input.is_action_just_pressed("mouse_click_r"):
@@ -67,6 +70,7 @@ func _control():
 		if not selected_units.empty():
 			set_army_move_command()
 		is_drawing = false  # disable drawing, formation is set to all selected units
+		print("s-1: {}, s0: {}, m0: {}, v0: {}".format([prev_front_line_start_point, front_line_start_point, front_line_middle_point, front_line_vector], "{}") )
 
 	# update is_drawing for each selected unit
 	for unit in selected_units:
@@ -79,14 +83,26 @@ func _draw():
 	# drawing a line is only possible inside a _draw function
 	if is_drawing:
 		draw_line(front_line_start_point, mouse_pos, Color(255,255,255), 5)  # draw frontline
-		draw_line(front_line_middle, front_line_middle + front_line_normal, Color(255, 255, 0), 5)  # draw normal (direction)
+		draw_line(front_line_middle_point, front_line_middle_point + front_line_normal, Color(255, 255, 0), 5)  # draw normal (direction)
+		
+		# debug
+		draw_line(prev_front_line_start_point, front_line_start_point, Color(255, 255, 255), 3)
 	return
 
 
 func calc_front_line_vectors(end_point):
-	""" calculates the front line vectors using the mouse start point (click pos) and current position """
+	""" calculates the front line vectors using the end_point (usually mouse click pos) and current position """
+	
+	if (mouse_pos - front_line_start_point).length() < Globals.SPACE_BETWEEN_UNITS:
+		# user clicked and released on a single point without drawing a new formation
+		# move the army to the new point (front_line_vector_middle (prev) -> (new))
+		var move_vector = Vector2(mouse_pos.x - prev_front_line_start_point.x, mouse_pos.y - prev_front_line_start_point.y)  # move middle to new point
+		front_line_start_point = prev_front_line_start_point + move_vector # update the "new" front line start position for move method
+		end_point = front_line_start_point + front_line_vector  # modify the mouse position that sets the future front line so that the formation remains the same
+
+
 	front_line_vector = end_point - front_line_start_point
-	front_line_middle = front_line_start_point + (front_line_vector / 2)  # calc middle point 
+	front_line_middle_point = front_line_start_point + (front_line_vector / 2)  # calc middle point 
 	front_line_normal = Globals.calc_normal(front_line_vector) * Globals.ARMY_NORMAL_SIZE  # calc normal to frontline vector
 	
 #	var num_units_in_front_line = get_number_of_units_in_front_line()  # returns number of units that can fit in the front line
@@ -138,75 +154,6 @@ func set_front_line_start_point(point):
 	pass
 	
 
-func set_front_line_end_point(point):
-	front_line_end_point = point
-
-
-#func set_front_line_end_point(point):
-#
-#	var minimal_front_line = calc_minimal_front_line(selected_units)
-#
-#	if point == null:
-#		# if no end point given, place the end_point horizontally to start_point
-#		# add all selected units model diameters to create a front line vector
-#		var x = front_line_start_point.x
-#		x += minimal_front_line
-#		front_line_end_point = Vector2(x, front_line_start_point.y)
-#		return
-#
-#	if front_line_start_point.distance_to(point) < Globals.SPACE_BETWEEN_UNITS:
-#		"""
-#		user didn't draw a line or created a line which is too short
-#		move the unit to the point where the user clicked without changing 
-#		"""
-#		front_line_vector = Vector2(front_line_end_point.x - prev_front_line_start_point.x, front_line_end_point.y - prev_front_line_start_point.y)  # line vector from start point to mouse point
-#		front_line_middle = prev_front_line_start_point + (front_line_vector / 2)  # calc middle point for normal drawing
-##		front_line_normal = Globals.calc_normal(front_line_vector) * model_diameter  # calc normal to frontline vector
-#		var route_vector = point - front_line_middle  # create new route vector
-#		# update both start and end points
-#		set_front_line_start_point(prev_front_line_start_point + route_vector)
-#		front_line_end_point = front_line_end_point + route_vector  # update end point
-#
-#		calc_army_formation()
-#		return
-#	else:	
-#		front_line_end_point = point
-#		return
-#	pass
-	
-
-#func set_end_point(point=null):
-#
-#	#### #TODO : this needs to move to the army script!!!
-#
-#	if point == null:
-#		# if no end point given, place the end_point horizontally with start_point
-#		var x = start_point.x + (models_in_row) * model_diameter
-#		end_point = Vector2(x, start_point.y)
-#		return
-#
-#	# calc minimal row length
-##	var minimal_distance = model_diameter * (models_in_row - 1)
-#
-#	if front_line_start_point.distance_to(point) < model_diameter:
-#		"""
-#		user didn't draw a line or created a line which is too short
-#		move the unit to the point where the user clicked without changing 
-#		"""
-#		front_line_vector = Vector2(end_point.x - tmp_start_point.x, end_point.y - tmp_start_point.y)  # line vector from start point to mouse point
-#		front_line_middle = tmp_start_point + (front_line_vector / 2)  # calc middle point
-##		front_line_normal = Globals.calc_normal(front_line_vector) * model_diameter  # calc normal to frontline vector
-#		var route_vector = point - front_line_middle  # create new route vector
-#		# update both start and end points
-#		set_start_point(tmp_start_point + route_vector)
-#		end_point = end_point + route_vector
-#		calc_formation(start_point, end_point)
-#		return
-#	else:	
-#		end_point = point
-#		return
-
-		
 func get_number_of_units_in_front_line():
 	"""
 	This method returns the maximal number of selected units that can fit in the front line
