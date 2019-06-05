@@ -1,8 +1,77 @@
-[gd_scene load_steps=2 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://Units/Unit.gd" type="Script" id=1]
+[ext_resource path="res://Assets/Units/unit_marker.png" type="Texture" id=2]
+[ext_resource path="res://icon.png" type="Texture" id=3]
 
-[node name="Unit" type="Node2D"]
+[sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 29.6077, 29.8599 )
+
+[node name="Unit" type="Area2D"]
+collision_layer = 6
 script = ExtResource( 1 )
-max_unit_size = 26
 
+[node name="Front_Position2D" type="Position2D" parent="."]
+position = Vector2( 0, -50 )
+
+[node name="Unit_Marker_Sprite" type="Sprite" parent="."]
+scale = Vector2( 1.2, 1.2 )
+texture = ExtResource( 2 )
+
+[node name="Sprite" type="Sprite" parent="."]
+texture = ExtResource( 3 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource( 1 )
+
+[node name="Front_RayCast2D" type="RayCast2D" parent="."]
+enabled = true
+cast_to = Vector2( 35, 0 )
+
+[node name="Front_RayCast2D2" type="RayCast2D" parent="."]
+enabled = true
+cast_to = Vector2( 35, -25 )
+
+[node name="Front_RayCast2D3" type="RayCast2D" parent="."]
+enabled = true
+cast_to = Vector2( 35, 25 )
+
+[node name="Back_RayCast2D" type="RayCast2D" parent="."]
+enabled = true
+cast_to = Vector2( -35, 0 )
+
+[node name="Back_RayCast2D2" type="RayCast2D" parent="."]
+enabled = true
+cast_to = Vector2( -35, -25 )
+
+[node name="Back_RayCast2D3" type="RayCast2D" parent="."]
+enabled = true
+cast_to = Vector2( -35, 25 )
+
+[node name="Right_RayCast2D" type="RayCast2D" parent="."]
+scale = Vector2( 1.01187, 1 )
+enabled = true
+cast_to = Vector2( 0, 35 )
+
+[node name="Right_RayCast2D2" type="RayCast2D" parent="."]
+enabled = true
+cast_to = Vector2( 25, 35 )
+
+[node name="Right_RayCast2D3" type="RayCast2D" parent="."]
+enabled = true
+cast_to = Vector2( -25, 35 )
+
+[node name="Left_RayCast2D" type="RayCast2D" parent="."]
+enabled = true
+cast_to = Vector2( 0, -35 )
+
+[node name="Left_RayCast2D2" type="RayCast2D" parent="."]
+enabled = true
+cast_to = Vector2( 25, -35 )
+
+[node name="Left_RayCast2D3" type="RayCast2D" parent="."]
+enabled = true
+cast_to = Vector2( -25, -35 )
+
+[connection signal="mouse_entered" from="." to="." method="_on_Unit_mouse_entered"]
+[connection signal="mouse_exited" from="." to="." method="_on_Unit_mouse_exited"]
